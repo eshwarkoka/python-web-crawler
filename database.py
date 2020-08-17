@@ -100,6 +100,23 @@ def update_link_in_the_database(cursor: sqlite3.Cursor, link, source_link, is_cr
         )
 
 
+def check_if_number_of_rows_less_than_5000(cursor: sqlite3.Cursor):
+    try:
+        sql_query = """
+                        SELECT count(*)
+                        FROM Links
+                    """
+        cursor.execute(sql_query)
+        number_of_rows = cursor.fetchone()[0]
+        if number_of_rows < 5000:
+            return True
+        return False
+    except Exception as error_message:
+        print(
+            "Error Message: "+str(error_message)
+        )
+
+
 def commit_and_close_connection(connection: sqlite3.Connection):
     connection.commit()
     connection.close()
