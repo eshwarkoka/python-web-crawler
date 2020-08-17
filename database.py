@@ -1,9 +1,10 @@
 # database.py
-# create database utilities
+# database utilities to handle database queries
 
 
 import sqlite3
 import settings
+import utilities
 
 
 def create_connection(db_file_name) -> sqlite3.Connection:
@@ -25,6 +26,7 @@ def create_cursor(connection: sqlite3.Connection) -> sqlite3.Cursor:
 def create_table(cursor: sqlite3.Cursor, create_table_sql_query):
     try:
         cursor.execute(create_table_sql_query)
+        return True
     except sqlite3.Error as error_message:
         print(
             "Error Creating new Table \n"
@@ -34,7 +36,9 @@ def create_table(cursor: sqlite3.Cursor, create_table_sql_query):
 
 def check_if_link_exists(cursor: sqlite3.Cursor, link: str):
     sql_query = """
-                    SELECT COUNT(link) from Links where link = ?
+                    SELECT COUNT(link)
+                    FROM Links
+                    WHERE link = ?
                 """
     cursor.execute(sql_query,(link,))
     if cursor.fetchone()[0] == 0:
@@ -42,10 +46,71 @@ def check_if_link_exists(cursor: sqlite3.Cursor, link: str):
     return True
 
 
+def check_if_link_crawled_before_24hrs(cursor: sqlite3.Cursor, link: str):
+    try:
+        sql_query = """
+                        SELECT last_crawl_date
+                        FROM Links
+                        WHERE link = ?
+                    """
+        cursor.execute(sql_query,(link,))
+        link_last_crawl_epoch = cursor.fetchone()[0]
+        current_epoch_time = utilities.get_epoch_time()
+        return utilities.check_if_epoch_difference_less_than_24hrs(epoch_1=link_last_crawl_epoch, epoch_2=current_epoch_time)
+    except Exception as error_message:
+        print(
+            "Error Message: "+str(error_message)
+        )
+
+
+def insert_link_into_database(cursor: sqlite3.Cursor, link, source_link, is_crawled, last_crawl_date, response_status_code, response_content_type, response_content_length, link_created_date):
+    try:
+        sql_query = """
+                        INSERT INTO 
+                        Links(link, source_link, is_crawled, last_crawl_date, response_status_code, response_content_type, response_content_length, link_created_date) 
+                        VALUES(?,?,?,?,?,?,?,?)
+                    """
+        cursor.execute(sql_query, (link, source_link, is_crawled, last_crawl_date, response_status_code, response_content_type, response_content_length, link_created_date))
+        return True
+    except sqlite3.Error as error_message:
+        print(
+            "Unable to insert data into database...\n"
+            "Error message: "+str(error_message)
+        )
+
+
+def update_link_in_the_database(cursor: sqlite3.Cursor, link, source_link, is_crawled, last_crawl_date, response_status_code, response_content_type, response_content_length):
+    try:
+        sql_query = """
+                        UPDATE Links 
+                        SET source_link = ?,
+                        is_crawled = ?,
+                        last_crawl_date = ?,
+                        response_status_code = ?,
+                        response_content_type = ?,
+                        response_content_length = ? 
+                        WHERE link = ?
+                    """
+        cursor.execute(sql_query, (source_link, is_crawled, last_crawl_date, response_status_code, response_content_type, response_content_length, link))
+        return True
+    except sqlite3.Error as error_message:
+        print(
+            "Unable to update the database...\n"
+            "Error message: "+str(error_message)
+        )
+
+
+def commit_and_close_connection(connection: sqlite3.Connection):
+    connection.commit()
+    connection.close()
+    return
+
+
 if __name__ == '__main__':
     DATABASE_NAME = settings.DATABASE_NAME
     CONNECTION = create_connection(db_file_name=DATABASE_NAME)
     CURSOR = create_cursor(connection=CONNECTION)
+    # create links table if it does not exist
     create_links_table_sql_query = """
                                     CREATE TABLE IF NOT EXISTS Links
                                     (
@@ -56,11 +121,10 @@ if __name__ == '__main__':
                                         last_crawl_date INTEGER NOT NULL,
                                         response_status_code INTEGER NOT NULL,
                                         response_content_type TEXT,
-                                        resonse_content_length INTEGER NOT NULL,
+                                        response_content_length INTEGER NOT NULL,
                                         link_created_date INTEGER NOT NULL
                                     );
                                     """
-    # create Links table
     try:
         create_table(cursor=CURSOR, create_table_sql_query=create_links_table_sql_query)
         print(
@@ -72,5 +136,3 @@ if __name__ == '__main__':
             "Error Creating Links Table\n"
             "Error Message: "+str(error_message)
         )
-    print(check_if_link_exists(cursor=CURSOR,link="a"))
-    
