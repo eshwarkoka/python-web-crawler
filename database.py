@@ -34,6 +34,24 @@ def create_table(cursor: sqlite3.Cursor, create_table_sql_query):
         )
 
 
+def get_all_links_from_database(cursor: sqlite3.Cursor):
+    try:
+        sql_query = """
+                        SELECT link
+                        FROM Links
+                    """
+        cursor.execute(sql_query)
+        links = cursor.fetchall()
+        parsed_links = []
+        for link in links:
+            parsed_links.append(link[0])
+        return parsed_links
+    except Exception as error_message:
+        print(
+            "Error Message: "+str(error_message)
+        )
+
+
 def check_if_link_exists(cursor: sqlite3.Cursor, link: str):
     sql_query = """
                     SELECT COUNT(link)
@@ -44,6 +62,23 @@ def check_if_link_exists(cursor: sqlite3.Cursor, link: str):
     if cursor.fetchone()[0] == 0:
         return False
     return True
+
+
+def is_crawled(cursor: sqlite3.Cursor, link: str):
+    try:
+        sql_query = """
+                        SELECT is_crawled
+                        FROM Links
+                        WHERE link = ?
+                    """
+        cursor.execute(sql_query, (link,))
+        if cursor.fetchone()[0] == "1":
+            return True
+        return False
+    except Exception as error_message:
+        print(
+            "Error Message: "+str(error_message)
+        )
 
 
 def check_if_link_crawled_before_24hrs(cursor: sqlite3.Cursor, link: str):
@@ -63,14 +98,14 @@ def check_if_link_crawled_before_24hrs(cursor: sqlite3.Cursor, link: str):
         )
 
 
-def insert_link_into_database(cursor: sqlite3.Cursor, link, source_link, is_crawled, last_crawl_date, response_status_code, response_content_type, response_content_length, link_created_date):
+def insert_link_into_database(cursor: sqlite3.Cursor, link, source_link, is_crawled, last_crawl_date, response_status_code, response_content_type, response_content_length, file_path, link_created_date):
     try:
         sql_query = """
                         INSERT INTO 
-                        Links(link, source_link, is_crawled, last_crawl_date, response_status_code, response_content_type, response_content_length, link_created_date) 
-                        VALUES(?,?,?,?,?,?,?,?)
+                        Links(link, source_link, is_crawled, last_crawl_date, response_status_code, response_content_type, response_content_length, file_path, link_created_date) 
+                        VALUES(?,?,?,?,?,?,?,?,?)
                     """
-        cursor.execute(sql_query, (link, source_link, is_crawled, last_crawl_date, response_status_code, response_content_type, response_content_length, link_created_date))
+        cursor.execute(sql_query, (link, source_link, is_crawled, last_crawl_date, response_status_code, response_content_type, response_content_length, file_path, link_created_date))
         return True
     except sqlite3.Error as error_message:
         print(
@@ -79,7 +114,7 @@ def insert_link_into_database(cursor: sqlite3.Cursor, link, source_link, is_craw
         )
 
 
-def update_link_in_the_database(cursor: sqlite3.Cursor, link, source_link, is_crawled, last_crawl_date, response_status_code, response_content_type, response_content_length):
+def update_link_in_the_database(cursor: sqlite3.Cursor, link, source_link, is_crawled, last_crawl_date, response_status_code, response_content_type, response_content_length, file_path):
     try:
         sql_query = """
                         UPDATE Links 
@@ -88,7 +123,8 @@ def update_link_in_the_database(cursor: sqlite3.Cursor, link, source_link, is_cr
                         last_crawl_date = ?,
                         response_status_code = ?,
                         response_content_type = ?,
-                        response_content_length = ? 
+                        response_content_length = ?,
+                        file_path = ? 
                         WHERE link = ?
                     """
         cursor.execute(sql_query, (source_link, is_crawled, last_crawl_date, response_status_code, response_content_type, response_content_length, link))
@@ -108,7 +144,7 @@ def check_if_number_of_rows_less_than_5000(cursor: sqlite3.Cursor):
                     """
         cursor.execute(sql_query)
         number_of_rows = cursor.fetchone()[0]
-        if number_of_rows < 5000:
+        if number_of_rows < 500:
             return True
         return False
     except Exception as error_message:
@@ -132,14 +168,15 @@ if __name__ == '__main__':
                                     CREATE TABLE IF NOT EXISTS Links
                                     (
                                         id INTEGER PRIMARY KEY AUTOINCREMENT,
-                                        link TEXT NOT NULL,
-                                        source_link TEXT NOT NULL,
+                                        link TEXT,
+                                        source_link TEXT,
                                         is_crawled BOOLEAN NOT NULL CHECK (is_crawled IN (0,1)),
-                                        last_crawl_date INTEGER NOT NULL,
-                                        response_status_code INTEGER NOT NULL,
+                                        last_crawl_date INTEGER,
+                                        response_status_code INTEGER,
                                         response_content_type TEXT,
-                                        response_content_length INTEGER NOT NULL,
-                                        link_created_date INTEGER NOT NULL
+                                        response_content_length INTEGER,
+                                        file_path TEXT,
+                                        link_created_date INTEGER
                                     );
                                     """
     try:

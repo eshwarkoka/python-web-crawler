@@ -35,6 +35,15 @@ def check_if_epoch_difference_less_than_24hrs(epoch_1, epoch_2):
 
 # checks if href in anchor tag is valid or not
 def href_is_valid(href):
-    if href == "" or href == "/" or href == "#" or href == "javascript:;":
+    if href == "" or href == "/" or "#" in href or href == "javascript:;":
         return False
     return True
+
+
+# checks link and returns full link
+def get_full_link(source_link: str,link: str):
+    if link.startswith("https://"):
+        return str(link)
+    elif link.startswith("/"):
+        return str(source_link+link)
+    
