@@ -13,7 +13,6 @@ notes.txt
 rough.py
 
 # ignore environment variables file
-.env
 *.env
 
 # ignore project settings
@@ -21,3 +20,4 @@ rough.py
 
 # ignore databases
 *.sql*
+*.db*

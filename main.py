@@ -24,6 +24,7 @@ def start_crawler():
                 # check if link is crawled in the last 24 hrs
                 if database.check_if_link_crawled_before_24hrs(cursor=CURSOR, link=link):
                     # it True, do nothing!
+                    print("nothing!")
                     pass
                 else:
                     # link is not crawled in last 24 hrs
@@ -61,6 +62,8 @@ def start_crawler():
                                     print("link updated...")
                                 else:
                                     print("Maximum limit reached!")
+                                    print("sleeping for 5 seconds...")
+                                    time.sleep(5)
             else:
                 # link is not crawled at all
                 parser = 'html.parser'
@@ -98,6 +101,8 @@ def start_crawler():
                                 print("link inserted...")
                             else:
                                 print("Maximum limit reached!")
+                                print("sleeping for 5 seconds...")
+                                time.sleep(5)
         # sleep for 5 seconds
         print("sleeping for 5 seconds...")
         time.sleep(5)

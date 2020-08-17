@@ -35,7 +35,7 @@ def check_if_epoch_difference_less_than_24hrs(epoch_1, epoch_2):
 
 # checks if href in anchor tag is valid or not
 def href_is_valid(href):
-    if href == "" or href == "/" or "#" in href or href == "javascript:;":
+    if href is None or href == "" or href == "/" or "#" in href or href == "javascript:;":
         return False
     return True
 
