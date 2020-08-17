@@ -1,2 +1,23 @@
+# ignore virtual environments
 venv
+env
+
+# ignore cache files
+*pyc*
+
+# ignore vs code files
 .vscode
+
+# ignore personal project notes and rough notes
+notes.txt
+rough.py
+
+# ignore environment variables file
+.env
+*.env
+
+# ignore project settings
+*settings.py
+
+# ignore databases
+*.sql*
