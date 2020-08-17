@@ -136,3 +136,4 @@ if __name__ == '__main__':
             "Error Creating Links Table\n"
             "Error Message: "+str(error_message)
         )
+    commit_and_close_connection(connection=CONNECTION)
