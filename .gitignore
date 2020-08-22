@@ -21,3 +21,7 @@ rough.py
 # ignore databases
 *.sql*
 *.db*
+*.DS_Store*
+
+# ignore files folder
+files
